@@ -104,10 +104,11 @@ public class iCal {
 		try {
 			File file = new File(event.toString());
 
-			/* if the file exist, break otherwise create a file */
+			/* If the file exist, break otherwise create a file */
 			if (!file.exists()) {
 				file.createNewFile();
 			} else {
+				/* Use this for opening exist file later */ 
 				System.out.println("Event already exist.\n");
 			}
 
