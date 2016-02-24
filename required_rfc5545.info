@@ -1,0 +1,521 @@
+- Assignments parameters in the RFC5545 -
+
+3.3.5.  Date-Time
+
+   Value Name:  DATE-TIME
+
+   Purpose:  This value type is used to identify values that specify a
+      precise calendar date and time of day.
+      
+   Format Definition:  This value type is defined by the following
+      notation:
+
+       date-time  = date "T" time ;As specified in the DATE and TIME
+                                  ;value definitions
+
+   Description:  If the property permits, multiple "DATE-TIME" values
+      are specified as a COMMA-separated list of values.  No additional
+      content value encoding (i.e., BACKSLASH character encoding, see
+      Section 3.3.11) is defined for this value type.
+
+      The "DATE-TIME" value type is used to identify values that contain
+      a precise calendar date and time of day.  The format is based on
+      the [ISO.8601.2004] complete representation, basic format for a
+      calendar date and time of day.  The text format is a concatenation
+      of the "date", followed by the LATIN CAPITAL LETTER T character,
+      the time designator, followed by the "time" format.
+
+      The "DATE-TIME" value type expresses time values in three forms:
+
+      The form of date and time with UTC offset MUST NOT be used.  For
+      example, the following is not valid for a DATE-TIME value:
+
+       19980119T230000-0800       ;Invalid time format
+
+      FORM #1: DATE WITH LOCAL TIME
+
+      The date with local time form is simply a DATE-TIME value that
+      does not contain the UTC designator nor does it reference a time
+      zone.  For example, the following represents January 18, 1998, at
+      11 PM:
+
+       19980118T230000
+
+      DATE-TIME values of this type are said to be "floating" and are
+      not bound to any time zone in particular.  They are used to
+      represent the same hour, minute, and second value regardless of
+      which time zone is currently being observed.  For example, an
+      event can be defined that indicates that an individual will be
+      busy from 11:00 AM to 1:00 PM every day, no matter which time zone
+      the person is in.  In these cases, a local time can be specified.
+      The recipient of an iCalendar object with a property value
+      consisting of a local time, without any relative time zone
+      information, SHOULD interpret the value as being fixed to whatever
+      time zone the "ATTENDEE" is in at any given moment.  This means
+      that two "Attendees", in different time zones, receiving the same
+      event definition as a floating time, may be participating in the
+            event at different actual times.  Floating time SHOULD only be
+      used where that is the reasonable behavior.
+
+      In most cases, a fixed time is desired.  To properly communicate a
+      fixed time in a property value, either UTC time or local time with
+      time zone reference MUST be specified.
+
+      The use of local time in a DATE-TIME value without the "TZID"
+      property parameter is to be interpreted as floating time,
+      regardless of the existence of "VTIMEZONE" calendar components in
+      the iCalendar object.
+
+      FORM #2: DATE WITH UTC TIME
+
+      The date with UTC time, or absolute time, is identified by a LATIN
+      CAPITAL LETTER Z suffix character, the UTC designator, appended to
+      the time value.  For example, the following represents January 19,
+      1998, at 0700 UTC:
+
+       19980119T070000Z
+
+      The "TZID" property parameter MUST NOT be applied to DATE-TIME
+      properties whose time values are specified in UTC.
+
+      FORM #3: DATE WITH LOCAL TIME AND TIME ZONE REFERENCE
+
+      The date and local time with reference to time zone information is
+      identified by the use the "TZID" property parameter to reference
+      the appropriate time zone definition.  "TZID" is discussed in
+      detail in Section 3.2.19.  For example, the following represents
+      2:00 A.M. in New York on January 19, 1998:
+
+       TZID=America/New_York:19980119T020000
+
+      If, based on the definition of the referenced time zone, the local
+      time described occurs more than once (when changing from daylight
+      to standard time), the DATE-TIME value refers to the first
+      occurrence of the referenced time.  Thus, TZID=America/
+      New_York:20071104T013000 indicates November 4, 2007 at 1:30 A.M.
+      EDT (UTC-04:00).  If the local time described does not occur (when
+      changing from standard to daylight time), the DATE-TIME value is
+      interpreted using the UTC offset before the gap in local times.
+      Thus, TZID=America/New_York:20070311T023000 indicates March 11,
+      2007 at 3:30 A.M. EDT (UTC-04:00), one hour after 1:30 A.M. EST
+      (UTC-05:00).
+      A time value MUST only specify the second 60 when specifying a
+      positive leap second.  For example:
+
+       19970630T235960Z
+
+      Implementations that do not support leap seconds SHOULD interpret
+      the second 60 as equivalent to the second 59.
+
+   Example:  The following represents July 14, 1997, at 1:30 PM in New
+      York City in each of the three time formats, using the "DTSTART"
+      property.
+
+       DTSTART:19970714T133000                   ; Local time
+       DTSTART:19970714T173000Z                  ; UTC time
+       DTSTART;TZID=America/New_York:19970714T133000
+                                                 ; Local time and time
+                                                 ; zone reference
+
+3.6.1.  Event Component
+
+   Component Name:  VEVENT
+
+   Purpose:  Provide a grouping of component properties that describe an
+      event.
+
+   Format Definition:  A "VEVENT" calendar component is defined by the
+      following notation:
+
+       eventc     = "BEGIN" ":" "VEVENT" CRLF
+                    eventprop *alarmc
+                    "END" ":" "VEVENT" CRLF
+
+       eventprop  = *(
+                  ;
+                  ; The following are REQUIRED,
+                  ; but MUST NOT occur more than once.
+                  ;
+                  dtstamp / uid /
+                  ;
+                  ; The following is REQUIRED if the component
+                  ; appears in an iCalendar object that doesn't
+                  ; specify the "METHOD" property; otherwise, it
+                  ; is OPTIONAL; in any case, it MUST NOT occur
+                  ; more than once.
+                  ;
+                  dtstart /
+                  ;
+                  ; The following are OPTIONAL,
+                  ; but MUST NOT occur more than once.
+                  ;
+                  class / created / description / geo /
+                  last-mod / location / organizer / priority /
+                  seq / status / summary / transp /
+                  url / recurid /
+                  ;
+                  ; The following is OPTIONAL,
+                  ; but SHOULD NOT occur more than once.
+                  ;
+                  rrule /
+                  ;
+                  ; Either 'dtend' or 'duration' MAY appear in
+                  ; a 'eventprop', but 'dtend' and 'duration'
+                  ; MUST NOT occur in the same 'eventprop'.
+                  ;
+                  dtend / duration /
+                  ;
+                  ; The following are OPTIONAL,
+                  ; and MAY occur more than once.
+                  ;
+                  attach / attendee / categories / comment /
+                  contact / exdate / rstatus / related /
+                  resources / rdate / x-prop / iana-prop
+                  ;
+                  )
+
+   Description:  A "VEVENT" calendar component is a grouping of
+      component properties, possibly including "VALARM" calendar
+      components, that represents a scheduled amount of time on a
+      calendar.  For example, it can be an activity; such as a one-hour
+      long, department meeting from 8:00 AM to 9:00 AM, tomorrow.
+      Generally, an event will take up time on an individual calendar.
+      Hence, the event will appear as an opaque interval in a search for
+      busy time.  Alternately, the event can have its Time Transparency
+      set to "TRANSPARENT" in order to prevent blocking of the event in
+      searches for busy time.
+
+      The "VEVENT" is also the calendar component used to specify an
+      anniversary or daily reminder within a calendar.  These events
+      have a DATE value type for the "DTSTART" property instead of the
+      default value type of DATE-TIME.  If such a "VEVENT" has a "DTEND"
+      property, it MUST be specified as a DATE value also.  The
+      anniversary type of "VEVENT" can span more than one date (i.e.,
+      "DTEND" property value is set to a calendar date after the
+      "DTSTART" property value).  If such a "VEVENT" has a "DURATION"
+      property, it MUST be specified as a "dur-day" or "dur-week" value.
+
+      The "DTSTART" property for a "VEVENT" specifies the inclusive
+      start of the event.  For recurring events, it also specifies the
+      very first instance in the recurrence set.  The "DTEND" property
+      for a "VEVENT" calendar component specifies the non-inclusive end
+      of the event.  For cases where a "VEVENT" calendar component
+      specifies a "DTSTART" property with a DATE value type but no
+      "DTEND" nor "DURATION" property, the event's duration is taken to
+      be one day.  For cases where a "VEVENT" calendar component
+      specifies a "DTSTART" property with a DATE-TIME value type but no
+      "DTEND" property, the event ends on the same calendar date and
+      time of day specified by the "DTSTART" property.
+
+      The "VEVENT" calendar component cannot be nested within another
+      calendar component.  However, "VEVENT" calendar components can be
+      related to each other or to a "VTODO" or to a "VJOURNAL" calendar
+      component with the "RELATED-TO" property.
+
+   Example:  The following is an example of the "VEVENT" calendar
+      component used to represent a meeting that will also be opaque to
+      searches for busy time:
+
+       BEGIN:VEVENT
+       UID:19970901T130000Z-123401@example.com
+       DTSTAMP:19970901T130000Z
+       DTSTART:19970903T163000Z
+       DTEND:19970903T190000Z
+       SUMMARY:Annual Employee Review
+       CLASS:PRIVATE
+       CATEGORIES:BUSINESS,HUMAN RESOURCES
+       END:VEVENT
+
+      The following is an example of the "VEVENT" calendar component
+      used to represent a reminder that will not be opaque, but rather
+      transparent, to searches for busy time:
+      BEGIN:VEVENT
+       UID:19970901T130000Z-123402@example.com
+       DTSTAMP:19970901T130000Z
+       DTSTART:19970401T163000Z
+       DTEND:19970402T010000Z
+       SUMMARY:Laurel is in sensitivity awareness class.
+       CLASS:PUBLIC
+       CATEGORIES:BUSINESS,HUMAN RESOURCES
+       TRANSP:TRANSPARENT
+       END:VEVENT
+
+      The following is an example of the "VEVENT" calendar component
+      used to represent an anniversary that will occur annually:
+
+       BEGIN:VEVENT
+       UID:19970901T130000Z-123403@example.com
+       DTSTAMP:19970901T130000Z
+       DTSTART;VALUE=DATE:19971102
+       SUMMARY:Our Blissful Anniversary
+       TRANSP:TRANSPARENT
+       CLASS:CONFIDENTIAL
+       CATEGORIES:ANNIVERSARY,PERSONAL,SPECIAL OCCASION
+       RRULE:FREQ=YEARLY
+       END:VEVENT
+
+      The following is an example of the "VEVENT" calendar component
+      used to represent a multi-day event scheduled from June 28th, 2007
+      to July 8th, 2007 inclusively.  Note that the "DTEND" property is
+      set to July 9th, 2007, since the "DTEND" property specifies the
+      non-inclusive end of the event.
+
+       BEGIN:VEVENT
+       UID:20070423T123432Z-541111@example.com
+       DTSTAMP:20070423T123432Z
+       DTSTART;VALUE=DATE:20070628
+       DTEND;VALUE=DATE:20070709
+       SUMMARY:Festival International de Jazz de Montreal
+       TRANSP:TRANSPARENT
+       END:VEVENT
+
+3.8.1.6.  Geographic Position
+
+   Property Name:  GEO
+
+   Purpose:  This property specifies information related to the global
+      position for the activity specified by a calendar component.
+   
+   Value Type:  FLOAT.  The value MUST be two SEMICOLON-separated FLOAT
+      values.
+
+   Property Parameters:  IANA and non-standard property parameters can
+      be specified on this property.
+
+   Conformance:  This property can be specified in "VEVENT" or "VTODO"
+      calendar components.
+
+   Description:  This property value specifies latitude and longitude,
+      in that order (i.e., "LAT LON" ordering).  The longitude
+      represents the location east or west of the prime meridian as a
+      positive or negative real number, respectively.  The longitude and
+      latitude values MAY be specified up to six decimal places, which
+      will allow for accuracy to within one meter of geographical
+      position.  Receiving applications MUST accept values of this
+      precision and MAY truncate values of greater precision.
+
+      Values for latitude and longitude shall be expressed as decimal
+      fractions of degrees.  Whole degrees of latitude shall be
+      represented by a two-digit decimal number ranging from 0 through
+      90.  Whole degrees of longitude shall be represented by a decimal
+      number ranging from 0 through 180.  When a decimal fraction of a
+      degree is specified, it shall be separated from the whole number
+      of degrees by a decimal point.
+
+      Latitudes north of the equator shall be specified by a plus sign
+      (+), or by the absence of a minus sign (-), preceding the digits
+      designating degrees.  Latitudes south of the Equator shall be
+      designated by a minus sign (-) preceding the digits designating
+      degrees.  A point on the Equator shall be assigned to the Northern
+      Hemisphere.
+
+      Longitudes east of the prime meridian shall be specified by a plus
+      sign (+), or by the absence of a minus sign (-), preceding the
+      digits designating degrees.  Longitudes west of the meridian shall
+      be designated by minus sign (-) preceding the digits designating
+      degrees.  A point on the prime meridian shall be assigned to the
+      Eastern Hemisphere.  A point on the 180th meridian shall be
+      assigned to the Western Hemisphere.  One exception to this last
+      convention is permitted.  For the special condition of describing
+      a band of latitude around the earth, the East Bounding Coordinate
+      data element shall be assigned the value +180 (180) degrees.
+
+      Any spatial address with a latitude of +90 (90) or -90 degrees
+      will specify the position at the North or South Pole,
+      respectively.  The component for longitude may have any legal
+      value.
+      
+      With the exception of the special condition described above, this
+      form is specified in [ANSI INCITS 61-1986].
+
+      The simple formula for converting degrees-minutes-seconds into
+      decimal degrees is:
+
+      decimal = degrees + minutes/60 + seconds/3600.
+
+   Format Definition:  This property is defined by the following
+      notation:
+
+       geo        = "GEO" geoparam ":" geovalue CRLF
+
+       geoparam   = *(";" other-param)
+
+       geovalue   = float ";" float
+       ;Latitude and Longitude components
+
+   Example:  The following is an example of this property:
+
+       GEO:37.386013;-122.082932
+       
+3.8.1.12.  Summary
+
+   Property Name:  SUMMARY
+
+   Purpose:  This property defines a short summary or subject for the
+      calendar component.
+
+   Value Type:  TEXT
+
+   Property Parameters:  IANA, non-standard, alternate text
+      representation, and language property parameters can be specified
+      on this property.
+
+   Conformance:  The property can be specified in "VEVENT", "VTODO",
+      "VJOURNAL", or "VALARM" calendar components.
+
+   Description:  This property is used in the "VEVENT", "VTODO", and
+      "VJOURNAL" calendar components to capture a short, one-line
+      summary about the activity or journal entry.
+
+      This property is used in the "VALARM" calendar component to
+      capture the subject of an EMAIL category of alarm.
+
+   Format Definition:  This property is defined by the following
+      notation
+      
+
+       summary    = "SUMMARY" summparam ":" text CRLF
+
+       summparam  = *(
+                  ;
+                  ; The following are OPTIONAL,
+                  ; but MUST NOT occur more than once.
+                  ;
+                  (";" altrepparam) / (";" languageparam) /
+                  ;
+                  ; The following is OPTIONAL,
+                  ; and MAY occur more than once.
+                  ;
+                  (";" other-param)
+                  ;
+                  )
+
+   Example:  The following is an example of this property:
+
+       SUMMARY:Department Party
+       
+3.8.2.2.  Date-Time End
+
+   Property Name:  DTEND
+
+   Purpose:  This property specifies the date and time that a calendar
+      component ends.
+
+   Value Type:  The default value type is DATE-TIME.  The value type can
+      be set to a DATE value type.
+
+   Property Parameters:  IANA, non-standard, value data type, and time
+      zone identifier property parameters can be specified on this
+      property.
+
+   Conformance:  This property can be specified in "VEVENT" or
+      "VFREEBUSY" calendar components.
+
+   Description:  Within the "VEVENT" calendar component, this property
+      defines the date and time by which the event ends.  The value type
+      of this property MUST be the same as the "DTSTART" property, and
+      its value MUST be later in time than the value of the "DTSTART"
+      property.  Furthermore, this property MUST be specified as a date
+      with local time if and only if the "DTSTART" property is also
+      specified as a date with local time.
+
+      Within the "VFREEBUSY" calendar component, this property defines
+      the end date and time for the free or busy time information.  The
+      time MUST be specified in the UTC time format.  The value MUST be
+      later in time than the value of the "DTSTART" property.
+
+   Format Definition:  This property is defined by the following
+      notation:
+      
+       dtend      = "DTEND" dtendparam ":" dtendval CRLF
+
+       dtendparam = *(
+                  ;
+                  ; The following are OPTIONAL,
+                  ; but MUST NOT occur more than once.
+                  ;
+                  (";" "VALUE" "=" ("DATE-TIME" / "DATE")) /
+                  (";" tzidparam) /
+                  ;
+                  ; The following is OPTIONAL,
+                  ; and MAY occur more than once.
+                  ;
+                  (";" other-param)
+                  ;
+                  )
+
+       dtendval   = date-time / date
+       ;Value MUST match value type
+
+   Example:  The following is an example of this property:
+
+       DTEND:19960401T150000Z
+
+       DTEND;VALUE=DATE:19980704
+
+3.8.2.4.  Date-Time Start
+
+   Property Name:  DTSTART
+
+   Purpose:  This property specifies when the calendar component begins.
+
+   Value Type:  The default value type is DATE-TIME.  The time value
+      MUST be one of the forms defined for the DATE-TIME value type.
+      The value type can be set to a DATE value type.
+
+   Property Parameters:  IANA, non-standard, value data type, and time
+      zone identifier property parameters can be specified on this
+      property.
+
+   Conformance:  This property can be specified once in the "VEVENT",
+      "VTODO", or "VFREEBUSY" calendar components as well as in the
+      "STANDARD" and "DAYLIGHT" sub-components.  This property is
+      REQUIRED in all types of recurring calendar components that
+      specify the "RRULE" property.  This property is also REQUIRED in
+      "VEVENT" calendar components contained in iCalendar objects that
+      don't specify the "METHOD" property.
+
+   Description:  Within the "VEVENT" calendar component, this property
+      defines the start date and time for the event.
+
+      Within the "VFREEBUSY" calendar component, this property defines
+      the start date and time for the free or busy time information.
+      The time MUST be specified in UTC time.
+
+      Within the "STANDARD" and "DAYLIGHT" sub-components, this property
+      defines the effective start date and time for a time zone
+      specification.  This property is REQUIRED within each "STANDARD"
+      and "DAYLIGHT" sub-components included in "VTIMEZONE" calendar
+      components and MUST be specified as a date with local time without
+      the "TZID" property parameter.
+
+   Format Definition:  This property is defined by the following
+      notation:
+
+       dtstart    = "DTSTART" dtstparam ":" dtstval CRLF
+
+       dtstparam  = *(
+                  ;
+                  ; The following are OPTIONAL,
+                  ; but MUST NOT occur more than once.
+                  ;
+                  (";" "VALUE" "=" ("DATE-TIME" / "DATE")) /
+                  (";" tzidparam) /
+                  ;
+                  ; The following is OPTIONAL,
+                  ; and MAY occur more than once.
+                  ;
+                  (";" other-param)
+                  ;
+                  )
+
+       dtstval    = date-time / date
+       ;Value MUST match value type
+
+   Example:  The following is an example of this property:
+
+       DTSTART:19980118T073000Z
+
+      
+
+      
